@@ -10,6 +10,8 @@
 # local overrides some teams use
 *.local.properties
 # .editorconfig
+.vscode
+certs/
 # ---------- junk / accident backups at root ----------
 *BKP*
 *BKPPP*
