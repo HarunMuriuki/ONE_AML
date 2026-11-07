@@ -1,0 +1,96 @@
+# ============ GOAML monorepo root gitignore ============
+# Covers: ONE_goAML (Spring Boot/Gradle), ONE_goAMl_FE (Angular),
+# ONE_AML_Bridge (plain javac), docker-compose, docs.
+# Per-project .gitignore files inside each app still apply.
+
+# ---------- SECRETS (never push real credentials) ----------
+.env
+*.env
+!.env.example
+# local overrides some teams use
+*.local.properties
+# .editorconfig
+# ---------- junk / accident backups at root ----------
+*BKP*
+*BKPPP*
+_docker_backup/
+*.bak
+*.tmp
+*.swp
+*~
+
+# ---------- Java / Gradle / Maven ----------
+.gradle/
+**/build/
+**/out/
+**/target/
+.m2/
+*.class
+*.jar
+*.war
+*.ear
+# EXCEPTION: vendored offline deps for ONE_AML_Bridge must stay tracked
+!ONE_AML_Bridge/lib/*.jar
+# ...and keep the gradle wrapper jar
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# ---------- Node / Angular ----------
+**/node_modules/
+**/dist/
+**/tmp/
+**/out-tsc/
+**/bazel-out/
+npm-debug.log*
+yarn-error.log*
+**/.angular/cache/
+.sass-cache/
+**/coverage/
+# big shipped zips in FE (distT3.zip, distT4.zip) - don't version them
+*.zip
+
+# ---------- Python / misc tooling ----------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# ---------- IDEs ----------
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/
+.project
+.classpath
+.settings/
+.c9/
+*.launch
+*.sublime-workspace
+/nbproject/private/
+/nbbuild/
+/nbdist/
+/.nb-gradle/
+.apt_generated
+.factorypath
+.springBeans
+.sts4-cache
+
+# ---------- OS ----------
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ---------- Docker / local data ----------
+neo4j-data/
+*.dump
+.docx
+errors.md
+MODEL_AND_PIPELINES.md
+/node_modules

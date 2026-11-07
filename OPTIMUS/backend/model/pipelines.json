@@ -1,0 +1,1057 @@
+{
+  "schema" : "schema.json",
+  "version" : "1.0.0",
+  "notes" : "Editable data layer for the static model in schema.json. Every node and relationship has exactly one slot here - an empty or placeholder 'select' means it has not been mapped to Finacle yet. Nothing is hardcoded in Java; the engine reads schema.json (shape) + this file (queries). SELECTs may contain a single '?' which the engine binds to the row limit.",
+  "defaults" : {
+    "previewLimit" : 50,
+    "maxRows" : 5000,
+    "batchSize" : 1000
+  },
+  "nodes" : [ {
+    "id" : "account",
+    "label" : "Account",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "key" : [ "accountNumber" ],
+    "map" : {
+      "accountNumber" : "accountnum",
+      "acid" : "acid",
+      "cifId" : "cifid",
+      "solID" : "solid",
+      "schemeCode" : "schemecode",
+      "accountType" : "schemetype",
+      "accountName" : "accountname",
+      "shortName" : "shortname",
+      "currency" : "currency",
+      "balance" : "balance",
+      "openedDate" : "openeddate",
+      "ownership" : "ownership",
+      "closedFlag" : "closedflag",
+      "status" : "status"
+    },
+    "select" : "SELECT g.foracid         AS accountnum,\n       g.acid            AS acid,\n       g.cif_id          AS cifid,\n       g.sol_id          AS solid,\n       g.schm_code       AS schemecode,\n       g.schm_type       AS schemetype,\n       g.acct_name       AS accountname,\n       g.acct_short_name AS shortname,\n       g.acct_crncy_code AS currency,\n       g.clr_bal_amt     AS balance,\n       g.acct_opn_date   AS openeddate,\n       g.acct_ownership  AS ownership,\n       g.acct_cls_flg    AS closedflag,\n       s.acct_status     AS status\nFROM   tbaadm.gam g\nLEFT JOIN tbaadm.smt s ON s.bank_id = g.bank_id AND s.acid = g.acid\nWHERE  g.bank_id = '01'\n  AND  g.del_flg = 'N'\n  AND  g.entity_cre_flg = 'Y'\n  AND  ROWNUM <= ?",
+    "notes" : "Grounded in STR/SAR/GraphSelectors: tbaadm.gam g LEFT JOIN tbaadm.smt s. key = foracid (accountNumber); acid is the join id used by the transaction/relationship slots; cif_id links to Customer.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "customer",
+    "label" : "Customer",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "key" : [ "customerId" ],
+    "map" : {
+      "customerId" : "cifid",
+      "name" : "name",
+      "cifType" : "ciftype"
+    },
+    "select" : "SELECT * FROM (\n  SELECT a.CIF_ID AS cifid,\n         MAX(country)   AS country,\n         MAX(c.NAME)    AS name,\n         MAX(a.CIF_TYPE) AS ciftype,\n         MAX(dob)       AS dob,\n         MAX(solID)     AS solid,\n         MAX(a.opendate) AS opendate\n  FROM   custom.cif_acct_data_aml a\n  LEFT JOIN custom.CIF_DATA_aml c ON c.CIF_ID = a.CIF_ID\n  GROUP BY a.CIF_ID\n)\nWHERE ROWNUM <= ?",
+    "notes" : "Source = SIMBA.ACCOUNT_DATA a LEFT JOIN SIMBA.CIF_DATA c (domain input). key = CIF_ID (customerId). NAME is a single field -> stored as 'name' (the model's firstName/lastName are not derivable from it). CIF_TYPE carried as cifType.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "counterparty",
+    "label" : "Counterparty",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "key" : [ "counterpartyId" ],
+    "map" : {
+      "counterpartyId" : "counterpartyid",
+      "name" : "name",
+      "type" : "type"
+    },
+    "select" : "-- PLACEHOLDER: replace with real Finacle SQL\nSELECT <id_col>     AS counterpartyid,\n       <name_col>   AS name,\n       <type_col>   AS type\nFROM   <counterparty_table>\nWHERE  ROWNUM <= ?",
+    "notes" : "TBD source table for external counterparties.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "transaction",
+    "label" : "Transaction",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "key" : [ "transactionId", "date", "acid" ],
+    "map" : {
+      "transactionId" : "tranid",
+      "date" : "trandate",
+      "solID" : "solid",
+      "postedFlag" : "postedflag",
+      "legCount" : "legcount",
+      "acid" : "acid",
+      "amount" : "amount"
+    },
+    "select" : "SELECT h.tran_id   AS tranid,\n       h.tran_date AS trandate,\n       h.sol_id    AS solid,\n       h.pstd_flg  AS postedflag,\nacid as acid,\n       h.tran_amt          AS amount,\n       COUNT(*)    AS legcount\nFROM   custom.ctd_dtd_acli_view h\nWHERE  h.bank_id = '01'\n  AND  h.pstd_flg = 'Y'\nGROUP BY h.tran_id, h.tran_date, h.sol_id, h.pstd_flg,acid,h.tran_amt",
+    "notes" : "PARENT level: one node per BUSINESS transaction (tran_id + tran_date) = 2,264. GROUP BY guarantees exactly one row per transaction, so legs can never collapse a parent or overwrite it with last-leg-wins. The individual double-entry postings live in the 'transactionEntry' slot (keyed + part_tran_srl_num). Fraud queries MUST count/sum THESE nodes, never the entries.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "transactionentry",
+    "label" : "TransactionEntry",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "key" : [ "transactionId", "date", "amount", "acid", "parttransrlnum" ],
+    "map" : {
+      "transactionId" : "tranid",
+      "date" : "trandate",
+      "amount" : "amount",
+      "currency" : "currency",
+      "tranType" : "trantype",
+      "tranSubType" : "transubtype",
+      "partTranType" : "parttrantype",
+      "acid" : "acid",
+      "solId" : "solid",
+      "particulars" : "particulars",
+      "particulars2" : "particulars2",
+      "remarks" : "remarks",
+      "postedFlag" : "postedflag",
+      "del_flg" : "del_flg",
+      "instrumentnumber" : "instrumentnumber",
+      "exchangerate" : "exchangerate",
+      "refcurrency" : "refcurrency",
+      "parttransrlnum" : "parttransrlnum",
+      "refnum" : "refnum",
+      "input_time" : "input_time"
+    },
+    "select" : "SELECT   h.tran_id           AS tranid,\n       h.tran_date         AS trandate,\n       h.acid              AS acid,\n       h.tran_amt          AS amount,\n       h.rcre_Time as input_time,\n       h.del_flg as del_flg ,\n       h.tran_crncy_code   AS currency,\n       h.tran_type         AS trantype,\n       h.tran_sub_type     AS transubtype,\n       h.part_tran_type    AS parttrantype,\n       h.PART_TRAN_SRL_NUM as parttransrlnum,\nh.REF_NUM as refnum,\nh.tran_particular   AS particulars,\n       h.tran_particular_2 AS particulars2,\n       h.tran_rmks         AS remarks,\n       h.instrmnt_num      AS instrumentnumber,\n       h.pstd_flg          AS postedflag,\n       h.sol_id            AS solid,\n       h.rate              AS exchangerate,\n       h.ref_crncy_code    AS refcurrency\nFROM   custom.ctd_dtd_acli_view h\nWHERE  h.bank_id = '01'",
+    "notes" : "CHILD level: one node per double-entry POSTING/leg = 8,753. Key is (tran_id + tran_date + part_tran_srl_num), verified unique within a transaction in Oracle. Every posted column is stored for traceability. NEVER count these for AML velocity/amount - they are postings, not business transactions.",
+    "cypher" : "UNWIND $rows AS r\nWITH r WHERE r.tranid IS NOT NULL AND r.trandate IS NOT NULL AND r.amount IS NOT NULL AND r.acid IS NOT NULL AND r.parttransrlnum IS NOT NULL\nMERGE (n:TransactionEntry {transactionId: toString(r.tranid), date: toString(r.trandate), amount: toString(r.amount), acid: toString(r.acid), parttransrlnum: toString(r.parttransrlnum)})\nSET n.currency = r.currency\nSET n.tranType = r.trantype\nSET n.tranSubType = r.transubtype\nSET n.partTranType = r.parttrantype\nSET n.solId = r.solid\nSET n.particulars = r.particulars\nSET n.particulars2 = r.particulars2\nSET n.remarks = r.remarks\nSET n.postedFlag = r.postedflag\nSET n.del_flg = r.del_flg\nSET n.instrumentnumber = r.instrumentnumber\nSET n.exchangerate = r.exchangerate\nSET n.refcurrency = r.refcurrency\nSET n.refnum = r.refnum\nSET n.input_time = r.input_time",
+    "delFlag" : "N"
+  }, {
+    "id" : "movement",
+    "label" : "Movement",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "key" : [ "movementId" ],
+    "map" : {
+      "movementId" : "movementid",
+      "amount" : "amount",
+      "currency" : "currency",
+      "date" : "date",
+      "status" : "status"
+    },
+    "select" : "-- PLACEHOLDER: replace with real Finacle SQL\nSELECT <id_col>     AS movementid,\n       <amt_col>    AS amount,\n       <crncy_col>  AS currency,\n       <date_col>   AS date,\n       <status_col> AS status\nFROM   <movement_table>\nWHERE  ROWNUM <= ?",
+    "notes" : "TBD source for money movements implied by a transaction.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "address",
+    "label" : "Address",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "key" : [ "addressLine1", "city" ],
+    "map" : {
+      "addressLine1" : "addressline1",
+      "addressLine2" : "addressline2",
+      "city" : "citycode"
+    },
+    "select" : "SELECT DISTINCT a.ADDRESS_LINE1 AS addressline1,\n       a.ADDRESS_LINE2 AS addressline2,\n       ct.CITY_CODE    AS citycode\nFROM   SIMBA.ACCOUNT_DATA a\nLEFT JOIN SIMBA.CITY ct ON UPPER(ct.CITY_NAME) = UPPER(a.CITY)\nWHERE  ROWNUM <= ?",
+    "notes" : "Source = SIMBA.ACCOUNT_DATA + SIMBA.CITY (CITY_CODE resolved from CITY_NAME). key = addressLine1 + city (street + mandatory locality; postal code is optional in Kenya/EAC, country is a separate node via LOCATED_IN). NOTE: schema.json Address NODE KEY still lists postCode - align later.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "country",
+    "label" : "Country",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "key" : [ "code" ],
+    "map" : {
+      "code" : "code",
+      "name" : "name"
+    },
+    "select" : "SELECT COUNTRY_CODE AS code,\n       COUNTRY_NAME AS name\nFROM   SIMBA.COUNTRY\nWHERE  ROWNUM <= ?",
+    "notes" : "Source = SIMBA.COUNTRY (domain input).",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "device",
+    "label" : "Device",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "key" : [ "deviceId" ],
+    "map" : {
+      "deviceId" : "deviceid",
+      "deviceType" : "devicetype",
+      "userAgent" : "useragent",
+      "createdAt" : "createdat"
+    },
+    "select" : "-- PLACEHOLDER: replace with real source\nSELECT <id_col>    AS deviceid,\n       <type_col>  AS devicetype,\n       <ua_col>    AS useragent,\n       <created>   AS createdat\nFROM   <device_source>\nWHERE  ROWNUM <= ?",
+    "notes" : "TBD; often from digital-channel logs rather than core banking.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "ip",
+    "label" : "IP",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "key" : [ "ipAddress" ],
+    "map" : {
+      "ipAddress" : "ipaddress",
+      "createdAt" : "createdat"
+    },
+    "select" : "-- PLACEHOLDER: replace with real source\nSELECT <ip_col>  AS ipaddress,\n       <created> AS createdat\nFROM   <ip_source>\nWHERE  ROWNUM <= ?",
+    "notes" : "TBD.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "isp",
+    "label" : "ISP",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "key" : [ "name" ],
+    "map" : {
+      "name" : "name",
+      "createdAt" : "createdat"
+    },
+    "select" : "-- PLACEHOLDER: replace with real source\nSELECT <name_col> AS name,\n       <created>  AS createdat\nFROM   <isp_source>\nWHERE  ROWNUM <= ?",
+    "notes" : "TBD.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "location",
+    "label" : "Location",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "key" : [ ],
+    "map" : {
+      "city" : "city",
+      "postCode" : "postcode",
+      "country" : "country",
+      "latitude" : "latitude",
+      "longitude" : "longitude"
+    },
+    "select" : "-- PLACEHOLDER: replace with real source\nSELECT <city_col>  AS city,\n       <postcode>  AS postcode,\n       <country>   AS country,\n       <lat>       AS latitude,\n       <lon>       AS longitude\nFROM   <location_source>\nWHERE  ROWNUM <= ?",
+    "notes" : "no key in the base model; GEO location for an IP.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "session",
+    "label" : "Session",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "key" : [ "sessionId" ],
+    "map" : {
+      "sessionId" : "sessionid",
+      "status" : "status",
+      "createdAt" : "createdat"
+    },
+    "select" : "-- PLACEHOLDER: replace with real source\nSELECT <id_col>    AS sessionid,\n       <status_col> AS status,\n       <created>   AS createdat\nFROM   <session_source>\nWHERE  ROWNUM <= ?",
+    "notes" : "TBD; digital-channel session for ATO-style hooks.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "email",
+    "label" : "Email",
+    "layer" : "identity",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "key" : [ "address" ],
+    "map" : {
+      "address" : "address",
+      "domain" : "domain",
+      "createdAt" : "createdat"
+    },
+    "select" : "-- PLACEHOLDER: replace with real Finacle SQL\nSELECT <email_col> AS address,\n       <domain_col> AS domain,\n       <created>   AS createdat\nFROM   <email_table>\nWHERE  ROWNUM <= ?",
+    "notes" : "identity attribute; feeds synthetic-identity / link analysis.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "phone",
+    "label" : "Phone",
+    "layer" : "identity",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "key" : [ "phoneNumber" ],
+    "map" : {
+      "phoneNumber" : "phonenumber",
+      "countryCode" : "countrycode",
+      "createdAt" : "createdat"
+    },
+    "select" : "-- PLACEHOLDER: replace with real Finacle SQL\nSELECT <phone_col>  AS phonenumber,\n       <country_col> AS countrycode,\n       <created>   AS createdat\nFROM   <phone_table>\nWHERE  ROWNUM <= ?",
+    "notes" : "identity attribute.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "passport",
+    "label" : "Passport",
+    "layer" : "identity",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "key" : [ "passportNumber", "issuingCountry" ],
+    "map" : {
+      "passportNumber" : "passportnumber",
+      "issuingCountry" : "issuingcountry",
+      "issueDate" : "issuedate",
+      "expiryDate" : "expirydate",
+      "nationality" : "nationality"
+    },
+    "select" : "-- PLACEHOLDER: replace with real Finacle SQL\nSELECT <num_col>    AS passportnumber,\n       <country_col> AS issuingcountry,\n       <issue_col>  AS issuedate,\n       <expiry_col> AS expirydate,\n       <nat_col>    AS nationality\nFROM   <passport_table>\nWHERE  ROWNUM <= ?",
+    "notes" : "composite key = passportNumber + issuingCountry",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "drivinglicense",
+    "label" : "DrivingLicense",
+    "layer" : "identity",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "key" : [ "licenseNumber", "issuingCountry" ],
+    "map" : {
+      "licenseNumber" : "licensenumber",
+      "issuingCountry" : "issuingcountry",
+      "issueDate" : "issuedate",
+      "expiryDate" : "expirydate"
+    },
+    "select" : "-- PLACEHOLDER: replace with real Finacle SQL\nSELECT <num_col>    AS licensenumber,\n       <country_col> AS issuingcountry,\n       <issue_col>  AS issuedate,\n       <expiry_col> AS expirydate\nFROM   <license_table>\nWHERE  ROWNUM <= ?",
+    "notes" : "composite key = licenseNumber + issuingCountry",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "face",
+    "label" : "Face",
+    "layer" : "identity",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "key" : [ "faceId" ],
+    "map" : {
+      "faceId" : "faceid",
+      "embedding" : "embedding",
+      "createdAt" : "createdat"
+    },
+    "select" : "-- PLACEHOLDER: replace with real source (biometrics store)\nSELECT <id_col>    AS faceid,\n       <embed_col> AS embedding,\n       <created>   AS createdat\nFROM   <face_source>\nWHERE  ROWNUM <= ?",
+    "notes" : "embedding is a List<Float> backing the vector index.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "alert",
+    "label" : "Alert",
+    "layer" : "event",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "key" : [ "alertId" ],
+    "map" : {
+      "alertId" : "alertid",
+      "ruleName" : "rulename",
+      "ruleId" : "ruleid",
+      "severity" : "severity",
+      "triggeredAt" : "triggeredat"
+    },
+    "select" : "-- PLACEHOLDER: alerts are usually produced by the scoring engine, not selected from Finacle\nSELECT <id_col>     AS alertid,\n       <rule_col>   AS rulename,\n       <ruleid_col> AS ruleid,\n       <sev_col>    AS severity,\n       <at_col>     AS triggeredat\nFROM   <alert_source>\nWHERE  ROWNUM <= ?",
+    "notes" : "proposed event node; normally written by detection, not ingested.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "case",
+    "label" : "Case",
+    "layer" : "event",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "key" : [ "caseId" ],
+    "map" : {
+      "caseId" : "caseid",
+      "status" : "status",
+      "outcome" : "outcome",
+      "financialStakes" : "financialstakes",
+      "investigatedBy" : "investigatedby",
+      "createdAt" : "createdat"
+    },
+    "select" : "-- PLACEHOLDER: cases originate in the case-management workflow, not Finacle\nSELECT <id_col>     AS caseid,\n       <status_col> AS status,\n       <out_col>    AS outcome,\n       <stakes_col> AS financialstakes,\n       <inv_col>    AS investigatedby,\n       <at_col>     AS createdat\nFROM   <case_source>\nWHERE  ROWNUM <= ?",
+    "notes" : "proposed event node.",
+    "cypher" : null,
+    "delFlag" : "N"
+  } ],
+  "relationships" : [ {
+    "id" : "performs",
+    "type" : "PERFORMS",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "from" : {
+      "label" : "Account",
+      "key" : {
+        "accountNumber" : "accountnum"
+      }
+    },
+    "to" : {
+      "label" : "Transaction",
+      "key" : {
+        "transactionId" : "tranid",
+        "date" : "trandate"
+      }
+    },
+    "map" : { },
+    "select" : "SELECT DISTINCT g.foracid AS accountnum, h.tran_id AS tranid, h.tran_date AS trandate\nFROM   custom.ctd_dtd_acli_view h\nJOIN   tbaadm.gam g ON g.acid = h.acid AND g.bank_id = h.bank_id AND g.del_flg = 'N'\nWHERE  h.bank_id = '01'\n  AND  h.pstd_flg = 'Y'",
+    "notes" : "Account -> Transaction, the ANALYTICAL edge fraud queries traverse. Endpoint key MUST match the Transaction node key (tran_id + tran_date) or the MATCH is ambiguous. DISTINCT because a transaction touches an account via several legs.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "has_leg",
+    "type" : "HAS_LEG",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "from" : {
+      "label" : "Transaction",
+      "key" : {
+        "transactionId" : "tranid",
+        "date" : "trandate"
+      }
+    },
+    "to" : {
+      "label" : "TransactionEntry",
+      "key" : {
+        "transactionId" : "tranid",
+        "date" : "trandate",
+        "legNo" : "legsrl"
+      }
+    },
+    "map" : { },
+    "select" : "SELECT DISTINCT h.tran_id AS tranid, h.tran_date AS trandate, h.part_tran_srl_num AS legsrl\nFROM   custom.ctd_dtd_acli_view h\nWHERE  h.bank_id = '01'\n  AND  h.pstd_flg = 'Y'",
+    "notes" : "Parent -> leg. This is what lets a drill-down go transaction -> its double-entry postings. Both endpoints must exist: run the 'transaction' and 'transactionentry' nodes FIRST.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "posted_to",
+    "type" : "POSTED_TO",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "from" : {
+      "label" : "TransactionEntry",
+      "key" : {
+        "transactionId" : "tranid",
+        "date" : "trandate",
+        "legNo" : "legsrl"
+      }
+    },
+    "to" : {
+      "label" : "Account",
+      "key" : {
+        "accountNumber" : "accountnum"
+      }
+    },
+    "map" : { },
+    "select" : "SELECT DISTINCT h.tran_id AS tranid, h.tran_date AS trandate, h.part_tran_srl_num AS legsrl, g.foracid AS accountnum\nFROM   custom.ctd_dtd_acli_view h\nJOIN   tbaadm.gam g ON g.acid = h.acid AND g.bank_id = h.bank_id AND g.del_flg = 'N'\nWHERE  h.bank_id = '01'\n  AND  h.pstd_flg = 'Y'",
+    "notes" : "Which account each posting hits (the leg's acid resolved to the business account number). This is the true money-movement edge - use it for flow analysis; 'performs' is the same join rolled up to the transaction.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "benefits_to",
+    "type" : "BENEFITS_TO",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "from" : {
+      "label" : "Transaction",
+      "key" : {
+        "transactionId" : "tranid"
+      }
+    },
+    "to" : {
+      "label" : "Account",
+      "key" : {
+        "accountNumber" : "accountnum"
+      }
+    },
+    "map" : { },
+    "select" : "-- PLACEHOLDER: destination account of the transaction\nSELECT <tran_id> AS tranid, <dest_foracid> AS accountnum\nFROM   <transaction_table>\nWHERE  ROWNUM <= ?",
+    "notes" : "Destination/beneficiary account - still unresolved. Findings from STR/STAR: ctd_dtd_acli_view rows are single legs (part_tran_type 'C' = credit/beneficiary, 'D' = debit); the in-bank destination may be the sibling credit leg (same tran_id + tran_date), while external destinations come from clearing/messaging tables (SIMBA.CLEARINGAMLRP, SIMBA.CLEARINGAMLEFTRP, \"CreditTransfer\"@mariadb, APZTB_TRANSACTION_REQUESt@FCIXLINK, tbaadm.smh/cgm/pord/porh). Needs domain sign-off before a real SELECT.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "customer_has_account",
+    "type" : "HAS_ACCOUNT",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "from" : {
+      "label" : "Customer",
+      "key" : {
+        "customerId" : "cifid"
+      }
+    },
+    "to" : {
+      "label" : "Account",
+      "key" : {
+        "accountNumber" : "accountnum"
+      }
+    },
+    "map" : {
+      "cifid" : "cifid",
+      "accountnum" : "accountnum"
+    },
+    "select" : "SELECT accounts.orgkey AS cifid, g.foracid AS accountnum\nFROM   tbaadm.gam g\njoin crmuser.accounts\non orgkey = g.cif_id\nWHERE  g.bank_id = '01'\n  AND  g.entity_cre_flg = 'Y'\n",
+    "notes" : "Grounded: gam.cif_id -> Customer, gam.foracid -> Account. No role/since columns found in Finacle, so this relationship carries no properties.",
+    "cypher" : "UNWIND $rows AS r\nMATCH (a:Customer {customerId: toString(r.cifid)})\nMATCH (b:Account {accountNumber: toString(r.accountnum)})\nMERGE (a)-[rel:HAS_ACCOUNT]->(b)\nSET rel.cifid = r.cifid\nSET rel.accountnum = r.accountnum",
+    "delFlag" : "N"
+  }, {
+    "id" : "counterparty_has_account",
+    "type" : "HAS_ACCOUNT",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "from" : {
+      "label" : "Counterparty",
+      "key" : {
+        "counterpartyId" : "counterpartyid"
+      }
+    },
+    "to" : {
+      "label" : "Account",
+      "key" : {
+        "accountNumber" : "accountnum"
+      }
+    },
+    "map" : {
+      "since" : "since"
+    },
+    "select" : "-- PLACEHOLDER: counterparty -> account\nSELECT <cp_id> AS counterpartyid, <foracid> AS accountnum\nFROM   <table>\nWHERE  ROWNUM <= ?",
+    "notes" : "TBD.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "customer_has_address",
+    "type" : "HAS_ADDRESS",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "from" : {
+      "label" : "Customer",
+      "key" : {
+        "customerId" : "cifid"
+      }
+    },
+    "to" : {
+      "label" : "Address",
+      "key" : {
+        "addressLine1" : "addressline1",
+        "city" : "citycode"
+      }
+    },
+    "map" : { },
+    "select" : "SELECT a.CIF_ID         AS cifid,\n       a.ADDRESS_LINE1 AS addressline1,\n       ct.CITY_CODE    AS citycode\nFROM   SIMBA.ACCOUNT_DATA a\nLEFT JOIN SIMBA.CITY ct ON UPPER(ct.CITY_NAME) = UPPER(a.CITY)\nWHERE  ROWNUM <= ?",
+    "notes" : "Source = SIMBA.ACCOUNT_DATA + SIMBA.CITY. No added-at / current columns in source, so no relationship properties.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "counterparty_has_address",
+    "type" : "HAS_ADDRESS",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "from" : {
+      "label" : "Counterparty",
+      "key" : {
+        "counterpartyId" : "counterpartyid"
+      }
+    },
+    "to" : {
+      "label" : "Address",
+      "key" : {
+        "addressLine1" : "addressline1",
+        "postCode" : "postcode"
+      }
+    },
+    "map" : {
+      "since" : "since",
+      "isCurrent" : "iscurrent"
+    },
+    "select" : "-- PLACEHOLDER: counterparty -> address\nSELECT <cp_id> AS counterpartyid, <line1> AS addressline1, <postcode> AS postcode\nFROM   <table>\nWHERE  ROWNUM <= ?",
+    "notes" : "TBD.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "has_driving_license",
+    "type" : "HAS_DRIVING_LICENSE",
+    "layer" : "identity",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "from" : {
+      "label" : "Customer",
+      "key" : {
+        "customerId" : "cifid"
+      }
+    },
+    "to" : {
+      "label" : "DrivingLicense",
+      "key" : {
+        "licenseNumber" : "licensenumber",
+        "issuingCountry" : "issuingcountry"
+      }
+    },
+    "map" : {
+      "verificationDate" : "verificationdate",
+      "verificationMethod" : "verificationmethod",
+      "verificationStatus" : "verificationstatus"
+    },
+    "select" : "-- PLACEHOLDER: customer -> driving license\nSELECT <cif> AS cifid, <num> AS licensenumber, <country> AS issuingcountry\nFROM   <license_table>\nWHERE  ROWNUM <= ?",
+    "notes" : "TBD.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "has_email",
+    "type" : "HAS_EMAIL",
+    "layer" : "identity",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "from" : {
+      "label" : "Customer",
+      "key" : {
+        "customerId" : "cifid"
+      }
+    },
+    "to" : {
+      "label" : "Email",
+      "key" : {
+        "address" : "address"
+      }
+    },
+    "map" : {
+      "since" : "since"
+    },
+    "select" : "-- PLACEHOLDER: customer -> email\nSELECT <cif> AS cifid, <email> AS address\nFROM   <email_table>\nWHERE  ROWNUM <= ?",
+    "notes" : "TBD.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "has_face",
+    "type" : "HAS_FACE",
+    "layer" : "identity",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "from" : {
+      "label" : "Customer",
+      "key" : {
+        "customerId" : "cifid"
+      }
+    },
+    "to" : {
+      "label" : "Face",
+      "key" : {
+        "faceId" : "faceid"
+      }
+    },
+    "map" : {
+      "verificationDate" : "verificationdate",
+      "verificationMethod" : "verificationmethod",
+      "verificationStatus" : "verificationstatus"
+    },
+    "select" : "-- PLACEHOLDER: customer -> face\nSELECT <cif> AS cifid, <face_id> AS faceid\nFROM   <face_table>\nWHERE  ROWNUM <= ?",
+    "notes" : "TBD.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "has_nationality",
+    "type" : "HAS_NATIONALITY",
+    "layer" : "identity",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "from" : {
+      "label" : "Customer",
+      "key" : {
+        "customerId" : "cifid"
+      }
+    },
+    "to" : {
+      "label" : "Country",
+      "key" : {
+        "code" : "countrycode"
+      }
+    },
+    "map" : { },
+    "select" : "-- PLACEHOLDER: customer -> country\nSELECT <cif> AS cifid, <country_code> AS countrycode\nFROM   <customer_table>\nWHERE  ROWNUM <= ?",
+    "notes" : "TBD.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "has_passport",
+    "type" : "HAS_PASSPORT",
+    "layer" : "identity",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "from" : {
+      "label" : "Customer",
+      "key" : {
+        "customerId" : "cifid"
+      }
+    },
+    "to" : {
+      "label" : "Passport",
+      "key" : {
+        "passportNumber" : "passportnumber",
+        "issuingCountry" : "issuingcountry"
+      }
+    },
+    "map" : {
+      "verificationDate" : "verificationdate",
+      "verificationMethod" : "verificationmethod",
+      "verificationStatus" : "verificationstatus"
+    },
+    "select" : "-- PLACEHOLDER: customer -> passport\nSELECT <cif> AS cifid, <num> AS passportnumber, <country> AS issuingcountry\nFROM   <passport_table>\nWHERE  ROWNUM <= ?",
+    "notes" : "TBD.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "has_phone",
+    "type" : "HAS_PHONE",
+    "layer" : "identity",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "from" : {
+      "label" : "Customer",
+      "key" : {
+        "customerId" : "cifid"
+      }
+    },
+    "to" : {
+      "label" : "Phone",
+      "key" : {
+        "phoneNumber" : "phonenumber"
+      }
+    },
+    "map" : {
+      "since" : "since"
+    },
+    "select" : "-- PLACEHOLDER: customer -> phone\nSELECT <cif> AS cifid, <phone> AS phonenumber\nFROM   <phone_table>\nWHERE  ROWNUM <= ?",
+    "notes" : "TBD.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "implied",
+    "type" : "IMPLIED",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "from" : {
+      "label" : "Transaction",
+      "key" : {
+        "transactionId" : "tranid"
+      }
+    },
+    "to" : {
+      "label" : "Movement",
+      "key" : {
+        "movementId" : "movementid"
+      }
+    },
+    "map" : {
+      "totalMovements" : "totalmovements"
+    },
+    "select" : "-- PLACEHOLDER: transaction -> movement\nSELECT <tran_id> AS tranid, <movement_id> AS movementid\nFROM   <movement_table>\nWHERE  ROWNUM <= ?",
+    "notes" : "TBD.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "is_allocated_to",
+    "type" : "IS_ALLOCATED_TO",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "from" : {
+      "label" : "IP",
+      "key" : {
+        "ipAddress" : "ipaddress"
+      }
+    },
+    "to" : {
+      "label" : "ISP",
+      "key" : {
+        "name" : "ispname"
+      }
+    },
+    "map" : {
+      "createdAt" : "createdat"
+    },
+    "select" : "-- PLACEHOLDER: ip -> isp\nSELECT <ip> AS ipaddress, <isp> AS ispname, <created> AS createdat\nFROM   <ip_geo_source>\nWHERE  ROWNUM <= ?",
+    "notes" : "TBD.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "is_hosted",
+    "type" : "IS_HOSTED",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "from" : {
+      "label" : "Account",
+      "key" : {
+        "accountNumber" : "accountnum"
+      }
+    },
+    "to" : {
+      "label" : "Country",
+      "key" : {
+        "code" : "countrycode"
+      }
+    },
+    "map" : { },
+    "select" : "-- PLACEHOLDER: account -> country\nSELECT <foracid> AS accountnum, <country_code> AS countrycode\nFROM   <table>\nWHERE  ROWNUM <= ?",
+    "notes" : "TBD.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "address_located_in_country",
+    "type" : "LOCATED_IN",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "from" : {
+      "label" : "Address",
+      "key" : {
+        "addressLine1" : "addressline1",
+        "city" : "citycode"
+      }
+    },
+    "to" : {
+      "label" : "Country",
+      "key" : {
+        "code" : "countrycode"
+      }
+    },
+    "map" : { },
+    "select" : "SELECT DISTINCT a.ADDRESS_LINE1 AS addressline1,\n       ct.CITY_CODE    AS citycode,\n       co.COUNTRY_CODE AS countrycode\nFROM   SIMBA.ACCOUNT_DATA a\nLEFT JOIN SIMBA.CITY ct ON UPPER(ct.CITY_NAME) = UPPER(a.CITY)\nLEFT JOIN SIMBA.COUNTRY co ON UPPER(co.COUNTRY_NAME) = UPPER(a.COUNTRY)\nWHERE  ROWNUM <= ?",
+    "notes" : "Source = SIMBA.ACCOUNT_DATA + SIMBA.CITY + SIMBA.COUNTRY. Run the address and country nodes first.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "ip_located_in_location",
+    "type" : "LOCATED_IN",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "from" : {
+      "label" : "IP",
+      "key" : {
+        "ipAddress" : "ipaddress"
+      }
+    },
+    "to" : {
+      "label" : "Location",
+      "key" : { }
+    },
+    "map" : {
+      "createdAt" : "createdat"
+    },
+    "select" : "-- PLACEHOLDER: ip -> location\nSELECT <ip> AS ipaddress, <city> AS city, <postcode> AS postcode\nFROM   <ip_geo_source>\nWHERE  ROWNUM <= ?",
+    "notes" : "Location has no key; the engine matches by the mapping columns.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "location_located_in_country",
+    "type" : "LOCATED_IN",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "from" : {
+      "label" : "Location",
+      "key" : { }
+    },
+    "to" : {
+      "label" : "Country",
+      "key" : {
+        "code" : "countrycode"
+      }
+    },
+    "map" : { },
+    "select" : "-- PLACEHOLDER: location -> country\nSELECT <city> AS city, <postcode> AS postcode, <country_code> AS countrycode\nFROM   <location_source>\nWHERE  ROWNUM <= ?",
+    "notes" : "TBD.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "session_uses_device",
+    "type" : "SESSION_USES_DEVICE",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "from" : {
+      "label" : "Session",
+      "key" : {
+        "sessionId" : "sessionid"
+      }
+    },
+    "to" : {
+      "label" : "Device",
+      "key" : {
+        "deviceId" : "deviceid"
+      }
+    },
+    "map" : { },
+    "select" : "-- PLACEHOLDER: session -> device\nSELECT <session_id> AS sessionid, <device_id> AS deviceid\nFROM   <session_source>\nWHERE  ROWNUM <= ?",
+    "notes" : "TBD.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "uses_ip",
+    "type" : "USES_IP",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "from" : {
+      "label" : "Session",
+      "key" : {
+        "sessionId" : "sessionid"
+      }
+    },
+    "to" : {
+      "label" : "IP",
+      "key" : {
+        "ipAddress" : "ipaddress"
+      }
+    },
+    "map" : { },
+    "select" : "-- PLACEHOLDER: session -> ip\nSELECT <session_id> AS sessionid, <ip> AS ipaddress\nFROM   <session_source>\nWHERE  ROWNUM <= ?",
+    "notes" : "TBD.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "used_by",
+    "type" : "USED_BY",
+    "layer" : "core",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "from" : {
+      "label" : "Device",
+      "key" : {
+        "deviceId" : "deviceid"
+      }
+    },
+    "to" : {
+      "label" : "Customer",
+      "key" : {
+        "customerId" : "cifid"
+      }
+    },
+    "map" : {
+      "lastUsed" : "lastused"
+    },
+    "select" : "-- PLACEHOLDER: device -> customer\nSELECT <device_id> AS deviceid, <cif> AS cifid, <last_used> AS lastused\nFROM   <device_source>\nWHERE  ROWNUM <= ?",
+    "notes" : "TBD.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "account_subject_of_case",
+    "type" : "SUBJECT_OF",
+    "layer" : "event",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "from" : {
+      "label" : "Account",
+      "key" : {
+        "accountNumber" : "accountnum"
+      }
+    },
+    "to" : {
+      "label" : "Case",
+      "key" : {
+        "caseId" : "caseid"
+      }
+    },
+    "map" : { },
+    "select" : "-- PLACEHOLDER: account -> case (produced by case management, not Finacle)\nSELECT <foracid> AS accountnum, <case_id> AS caseid FROM <case_source> WHERE ROWNUM <= ?",
+    "notes" : "proposed event link.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "customer_subject_of_case",
+    "type" : "SUBJECT_OF",
+    "layer" : "event",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "from" : {
+      "label" : "Customer",
+      "key" : {
+        "customerId" : "cifid"
+      }
+    },
+    "to" : {
+      "label" : "Case",
+      "key" : {
+        "caseId" : "caseid"
+      }
+    },
+    "map" : { },
+    "select" : "-- PLACEHOLDER: customer -> case (produced by case management, not Finacle)\nSELECT <cif> AS cifid, <case_id> AS caseid FROM <case_source> WHERE ROWNUM <= ?",
+    "notes" : "proposed event link.",
+    "cypher" : null,
+    "delFlag" : "N"
+  }, {
+    "id" : "triggered",
+    "type" : "TRIGGERED",
+    "layer" : "event",
+    "custom" : false,
+    "description" : null,
+    "enabled" : false,
+    "from" : {
+      "label" : "Alert",
+      "key" : {
+        "alertId" : "alertid"
+      }
+    },
+    "to" : {
+      "label" : "Case",
+      "key" : {
+        "caseId" : "caseid"
+      }
+    },
+    "map" : { },
+    "select" : "-- PLACEHOLDER: alert -> case (produced by detection/case management)\nSELECT <alert_id> AS alertid, <case_id> AS caseid FROM <case_source> WHERE ROWNUM <= ?",
+    "notes" : "proposed event link.",
+    "cypher" : null,
+    "delFlag" : "N"
+  } ]
+}

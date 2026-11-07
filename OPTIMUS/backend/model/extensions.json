@@ -1,0 +1,6 @@
+{
+  "version": "1.0.0",
+  "notes": "User-defined nodes and relationships added from the Model & Pipelines screen. Kept separate from pipelines.json so refreshing the shipped schema never wipes them. Deleted entries stay here with delFlag = 'Y' (soft delete) for audit; they are hidden from the UI and never synced.",
+  "nodes": [],
+  "relationships": []
+}

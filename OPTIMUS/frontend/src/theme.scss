@@ -1,0 +1,91 @@
+@use '@angular/material' as mat;
+
+// Initialize Material core styles
+@include mat.core();
+
+// =============================
+// 🎨 Custom Color Palettes
+// =============================
+
+// Primary palette (deep navy blue)
+$meeting-master-primary-palette: (
+  50: #f4f0e6,
+  100: #e4d7b7,
+  200: #d3bd87,
+  300: #c2a358,
+  400: #b89037,
+  500: #b08b2e, // 🟤 main brand color
+  600: #9e7e2a,
+  700: #8c7125,
+  800: #7a6420,
+  900: #5c4a17,
+  contrast: (
+    50: rgba(black, 0.87),
+    100: rgba(black, 0.87),
+    200: rgba(black, 0.87),
+    300: white,
+    400: white,
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+  )
+);
+
+// Accent palette (your stone brown)
+$equity-stone-brown-palette: (
+  50: #ededed,
+  100: #d0d0d0,
+  200: #b2b1b1,
+  300: #99918c,
+  400: #86786f,
+  500: #736053,
+  600: #67564c,
+  700: #584a42,
+  800: #493d38,
+  900: #39302c,
+  contrast: (
+    50: rgba(black, 0.87),
+    100: rgba(black, 0.87),
+    200: rgba(black, 0.87),
+    300: rgba(black, 0.87),
+    400: rgba(black, 0.87),
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+  )
+);
+
+// =============================
+// 🧩 Define Palettes
+// =============================
+$meeting-master-primary: mat.define-palette($meeting-master-primary-palette, 500);
+$meeting-master-accent: mat.define-palette($equity-stone-brown-palette, 400);
+$meeting-master-warn: mat.define-palette(mat.$red-palette);
+
+// =============================
+// 🌗 Define Theme
+// =============================
+$meeting-master-theme: mat.define-light-theme((
+  color: (
+    primary: $meeting-master-primary,
+    accent: $meeting-master-accent,
+    warn: $meeting-master-warn,
+  ),
+  density: 0,
+));
+
+// =============================
+// 🧱 Apply Component Themes
+// =============================
+@include mat.core-theme($meeting-master-theme);
+@include mat.button-theme($meeting-master-theme);
+@include mat.form-field-theme($meeting-master-theme);
+@include mat.input-theme($meeting-master-theme);
+@include mat.icon-theme($meeting-master-theme);
+@include mat.toolbar-theme($meeting-master-theme);
+@include mat.card-theme($meeting-master-theme);
+@include mat.sidenav-theme($meeting-master-theme);

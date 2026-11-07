@@ -1,0 +1,12 @@
+UNWIND $rows AS r
+WITH r WHERE r.col1 IS NOT NULL [AND r.col2 IS NOT NULL]
+MERGE (n:Label {prop1: toString(r.col1), prop2: toString(r.col2)})
+SET n.p2 = r.c2, ...
+
+UNWIND $rows AS r
+MATCH (a:FromLabel {p: toString(r.c), ...})
+MATCH (b:ToLabel {p: toString(r.c), ...})
+MERGE (a)-[:TYPE]->(b)
+SET ...  (on rel, using r.column) -- but SET needs a variable; use `MERGE (a)-[rel:TYPE]->(b) SET rel.p = r.c`
+
+

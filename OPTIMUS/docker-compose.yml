@@ -1,0 +1,25 @@
+# NEO graph store - ONE command: docker compose up -d
+# Neo4j only; backend + frontend run on the host (gradlew bootRun / npm start).
+services:
+  neo4j:
+    image: neo4j:5-community
+    container_name: neo4j
+    environment:
+      - NEO4J_AUTH=${NEO4J_AUTH:-neo4j/password123}
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j-data:/data
+      - neo4j-logs:/logs
+      - neo4j-plugins:/plugins
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p password123 'RETURN 1' || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+volumes:
+  neo4j-data:
+  neo4j-logs:
+  neo4j-plugins:

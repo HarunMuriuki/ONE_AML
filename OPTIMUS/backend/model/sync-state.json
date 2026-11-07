@@ -1,0 +1,12 @@
+{
+  "rel:customer_has_account" : {
+    "lastKey" : [ "540000007", "0199LA4000000467" ],
+    "count" : 812,
+    "done" : true
+  },
+  "rel:performs" : {
+    "lastKey" : [ "9990100000070", "     EM99", 1789592400000 ],
+    "count" : 5686,
+    "done" : true
+  }
+}

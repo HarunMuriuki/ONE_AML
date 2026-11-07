@@ -1,0 +1,94 @@
+.body-bg {
+  background-color: rgba(76, 175, 80, 0.1);
+  border-radius: 12px; // Faded background color
+}
+
+.summary-card {
+  background-color: rgba(76, 175, 80, 0.1); // faded green
+  border: 1px solid rgba(76, 175, 80, 0.15);
+}
+
+
+:host ::ng-deep {
+  // Shared styles for the step icon
+  .mat-step-icon {
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
+
+  // INACTIVE step: faded green for icon and connector
+  .mat-step-header:not(.mat-active):not(.mat-completed) .mat-step-icon {
+    background-color: rgba(76, 175, 80, 0.3); // faded green
+    color: rgba(0, 0, 0, 0.4); // faded text
+  }
+
+  .mat-step-header:not(.mat-active):not(.mat-completed) ~ .mat-stepper-horizontal-line {
+    border-color: rgba(76, 175, 80, 0.3); // faded green
+  }
+
+  // COMPLETED step: full green for icon and connector
+  .mat-step-header.mat-completed .mat-step-icon {
+    background-color: #4CAF50; // full green
+    color: white;
+  }
+
+  .mat-step-header.mat-completed ~ .mat-stepper-horizontal-line {
+    border-color: #4CAF50 !important; // full green for connector
+  }
+
+  // ACTIVE step: highlighted icon and connector line
+  .mat-step-header.mat-active .mat-step-icon {
+    background-color: #4CAF50; // full green
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.3);
+  }
+
+  .mat-step-header.mat-active ~ .mat-stepper-horizontal-line {
+    border-color: #4CAF50 !important; // active green for connector
+  }
+
+  // ACTIVE label: stronger green color
+  .mat-step-header.mat-active .mat-step-label {
+    color: #2e7d32 !important; // deeper green
+    font-weight: 600;
+  }
+
+  // General connector line style
+  .mat-horizontal-stepper-header + .mat-stepper-horizontal-line,
+  .mat-stepper-horizontal-line {
+    border-top-width: 2px;
+    border-color: rgba(76, 175, 80, 0.3); // default faded green
+  }
+
+  // CUSTOMIZATION FOR THE TITLE (Step Header)
+  .mat-step-header .mat-step-label {
+    background-color: rgba(76, 175, 80, 0.1);  // Faded background color
+    border-radius: 12px;                         // Rounded corners
+    padding: 4px 12px;                          // Reduced padding (height)
+    font-size: 14px;                            // Adjust font size to fit the new height
+    height: auto;
+    transition: background-color 0.3s ease;
+  }
+
+  // ACTIVE step title: slightly darker background
+  .mat-step-header.mat-active .mat-step-label {
+    background-color: rgba(76, 175, 80, 0.2);  // Darker green for active step
+  }
+}
+
+:host ::ng-deep .mat-checkbox-checked.mat-accent .mat-checkbox-background,
+:host ::ng-deep .mat-checkbox-indeterminate.mat-accent .mat-checkbox-background {
+  background-color: #4CAF50 !important;
+}
+
+:host ::ng-deep .mat-checkbox-checked .mat-checkbox-frame,
+:host ::ng-deep .mat-checkbox-indeterminate .mat-checkbox-frame {
+  border-color: #4CAF50 !important;
+}
+

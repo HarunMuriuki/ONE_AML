@@ -1,0 +1,118 @@
+<div>
+  <aside
+    id="leftsidebar"
+    class="sidebar bg"
+    (mouseenter)="mouseHover($event)"
+    (mouseleave)="mouseOut($event)"
+  >
+    <div class="sidebar-logo">
+      <img src="assets/images/sidebar/ONE_logo2.png" alt="Logo" />
+    </div>
+
+    <div class="menu" [perfectScrollbar]>
+      <ul class="list">
+        <!-- Top Most level menu -->
+        <li
+          [class.active]="
+            level1Menu === sidebarItem.moduleName &&
+            sidebarItem.submenu.length != 0
+          "
+          *ngFor="let sidebarItem of sidebarItems"
+          [routerLinkActive]="sidebarItem.submenu.length != 0 ? '' : 'active'"
+        >
+          <div class="header" *ngIf="sidebarItem.groupTitle === true">
+            {{ sidebarItem.title | translate }}
+          </div>
+          <a
+            [routerLink]="sidebarItem.class === '' ? [sidebarItem.path] : null"
+            *ngIf="!sidebarItem.groupTitle"
+            [ngClass]="[sidebarItem.class]"
+            (click)="callLevel1Toggle($event, sidebarItem.moduleName)"
+            class="menu-top"
+          >
+            <div class="icon-container">
+              <i-feather
+                [name]="sidebarItem.icon"
+                class="sidebarIcon l-bg-brown"
+              ></i-feather>
+            </div>
+            <div class="name-container">
+              <span class="hide-menu">{{ sidebarItem.title | translate }}</span>
+            </div>
+            <span
+              *ngIf="sidebarItem.badge != ''"
+              [ngClass]="[sidebarItem.badgeClass]"
+              >{{ sidebarItem.badge }}</span
+            >
+          </a>
+          <!-- First level menu -->
+          <ul class="ml-menu" *ngIf="sidebarItem.submenu.length > 0">
+            <li
+              [ngClass]="
+                level2Menu === sidebarSubItem.moduleName ? 'activeSub' : ''
+              "
+              *ngFor="let sidebarSubItem of sidebarItem.submenu"
+              [routerLinkActive]="
+                sidebarSubItem.submenu.length > 0 ? '' : 'active'
+              "
+            >
+              <a
+                [routerLink]="
+                  sidebarSubItem.submenu.length > 0
+                    ? null
+                    : [sidebarSubItem.path]
+                "
+                (click)="callLevel2Toggle($event, sidebarSubItem.moduleName)"
+                [ngClass]="[sidebarSubItem.class]"
+              >
+                <i-feather
+                  [name]="sidebarSubItem.icon"
+                  class="submenu-icon"
+                ></i-feather>
+                <span>{{ sidebarSubItem.title | translate }}</span>
+              </a>
+              <!-- Second level menu -->
+              <ul class="ml-menu-2" *ngIf="sidebarSubItem.submenu.length > 0">
+                <li
+                  *ngFor="let sidebarSubsubItem of sidebarSubItem.submenu"
+                  [ngClass]="
+                    level3Menu === sidebarSubsubItem.moduleName
+                      ? 'activeSubSub'
+                      : ''
+                  "
+                  [routerLinkActive]="
+                    sidebarSubsubItem.submenu.length > 0 ? '' : 'active'
+                  "
+                >
+                  <a
+                    [routerLink]="
+                      sidebarSubsubItem.submenu.length > 0
+                        ? null
+                        : [sidebarSubsubItem.path]
+                    "
+                    (click)="
+                      callLevel3Toggle($event, sidebarSubsubItem.moduleName)
+                    "
+                    [ngClass]="[sidebarSubsubItem.class]"
+                  >
+                    <i-feather
+                      [name]="sidebarSubsubItem.icon"
+                      class="submenu-icon"
+                    ></i-feather>
+                    <span>{{ sidebarSubsubItem.title | translate }}</span>
+                  </a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+
+    <div class="logout-container" (click)="logout()">
+      <button mat-raised-button class="logout-btn" type="submit">
+        <span class="logout-text">LOG OUT</span>
+      </button>
+    </div>
+  </aside>
+</div>

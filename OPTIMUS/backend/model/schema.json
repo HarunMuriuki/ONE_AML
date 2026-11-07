@@ -1,0 +1,341 @@
+{
+  "model": "neo-shared",
+  "version": "1.0.0",
+  "status": "static",
+  "description": "The static shared graph model. Transcribed verbatim from Neo4j's published Transaction & Account base model. Labels, properties, relationship types/directions, NODE KEY constraints and indexes are intentionally kept identical to the source. Items marked \"proposed\": true come from the doc's 'proposed changes' and are included as-is.",
+  "source": "Neo4j Industry Use Cases - Transaction & Account Data Model",
+  "sourceUrl": "https://neo4j.com/developer/industry-use-cases/data-models/transaction-graph/transaction/transaction-base-model/",
+  "conventions": {
+    "date": "ISO-8601 date (YYYY-MM-DD)",
+    "dateTime": "ISO-8601 zoned date-time",
+    "optional": "may be absent",
+    "key": "identity property/ies enforced by a NODE KEY constraint",
+    "additionalLabels": "extra labels a node of this base type may also carry",
+    "proposedLabels": "labels proposed by the doc, not part of the original noun space"
+  },
+  "nodes": [
+    {
+      "label": "Account",
+      "key": ["accountNumber"],
+      "keyType": "NODE KEY",
+      "additionalLabels": ["Internal", "External", "HighRiskJurisdiction"],
+      "proposedLabels": ["Flagged", "UnderInvestigation", "Confirmed"],
+      "properties": [
+        { "name": "accountNumber", "type": "String" },
+        { "name": "accountType", "type": "String", "optional": true },
+        { "name": "openedDate", "type": "DateTime", "optional": true },
+        { "name": "closedDate", "type": "DateTime", "optional": true },
+        { "name": "suspendedDate", "type": "DateTime", "optional": true }
+      ]
+    },
+    {
+      "label": "Customer",
+      "key": ["customerId"],
+      "keyType": "NODE KEY",
+      "properties": [
+        { "name": "customerId", "type": "String" },
+        { "name": "firstName", "type": "String" },
+        { "name": "middleName", "type": "String", "optional": true },
+        { "name": "lastName", "type": "String" },
+        { "name": "dateOfBirth", "type": "Date" },
+        { "name": "placeOfBirth", "type": "String" },
+        { "name": "countryOfBirth", "type": "Country.ref" }
+      ]
+    },
+    {
+      "label": "Counterparty",
+      "key": ["counterpartyId"],
+      "keyType": "NODE KEY",
+      "properties": [
+        { "name": "counterpartyId", "type": "String" },
+        { "name": "name", "type": "String" },
+        { "name": "type", "type": "String" },
+        { "name": "registrationNumber", "type": "String", "optional": true },
+        { "name": "createdAt", "type": "DateTime" }
+      ]
+    },
+    {
+      "label": "Transaction",
+      "key": ["transactionId", "date"],
+      "keyType": "NODE KEY",
+      "properties": [
+        { "name": "transactionId", "type": "String" },
+        { "name": "date", "type": "String" },
+        { "name": "solID", "type": "String" },
+        { "name": "postedFlag", "type": "String" },
+        { "name": "legCount", "type": "Integer" }
+      ]
+    },
+    {
+      "label": "TransactionEntry",
+      "key": ["transactionId", "date", "legNo"],
+      "keyType": "NODE KEY",
+      "proposed": true,
+      "properties": [
+        { "name": "transactionId", "type": "String" },
+        { "name": "date", "type": "String" },
+        { "name": "legNo", "type": "String" },
+        { "name": "amount", "type": "Float" },
+        { "name": "currency", "type": "String" },
+        { "name": "direction", "type": "String" },
+        { "name": "tranType", "type": "String" },
+        { "name": "tranSubType", "type": "String" },
+        { "name": "partTranType", "type": "String" },
+        { "name": "glSubHeadCode", "type": "String" },
+        { "name": "acid", "type": "String" },
+        { "name": "solId", "type": "String" },
+        { "name": "valueDate", "type": "String" },
+        { "name": "particulars", "type": "String" },
+        { "name": "particulars2", "type": "String" },
+        { "name": "remarks", "type": "String" },
+        { "name": "refNum", "type": "String" },
+        { "name": "treaRefNum", "type": "String" },
+        { "name": "instrumentType", "type": "String" },
+        { "name": "instrumentNum", "type": "String" },
+        { "name": "instrumentDate", "type": "String" },
+        { "name": "postedFlag", "type": "String" },
+        { "name": "deletedFlag", "type": "String" },
+        { "name": "entryUserId", "type": "String" },
+        { "name": "entryDate", "type": "String" },
+        { "name": "verifiedFlag", "type": "String" },
+        { "name": "rate", "type": "Float" },
+        { "name": "fxTransactionAmount", "type": "Float" },
+        { "name": "transactionCurrency", "type": "String" },
+        { "name": "refCurrency", "type": "String" },
+        { "name": "refAmount", "type": "Float" },
+        { "name": "bankCode", "type": "String" },
+        { "name": "branchCode", "type": "String" }
+      ]
+    },
+    {
+      "label": "Movement",
+      "key": ["movementId"],
+      "keyType": "NODE KEY",
+      "properties": [
+        { "name": "movementId", "type": "String" },
+        { "name": "amount", "type": "Float" },
+        { "name": "currency", "type": "String" },
+        { "name": "date", "type": "DateTime" },
+        { "name": "description", "type": "String" },
+        { "name": "status", "type": "MoneyMovementStatus" },
+        { "name": "sequenceNumber", "type": "Long" },
+        { "name": "authorisedBy", "type": "String" },
+        { "name": "validatedBy", "type": "String" },
+        { "name": "createdAt", "type": "DateTime" }
+      ]
+    },
+    {
+      "label": "Address",
+      "key": ["addressLine1", "postCode"],
+      "keyType": "NODE KEY",
+      "properties": [
+        { "name": "addressLine1", "type": "String" },
+        { "name": "addressLine2", "type": "String", "optional": true },
+        { "name": "postTown", "type": "String" },
+        { "name": "postCode", "type": "String" },
+        { "name": "region", "type": "String", "optional": true },
+        { "name": "latitude", "type": "Float", "optional": true },
+        { "name": "longitude", "type": "Float", "optional": true },
+        { "name": "createdAt", "type": "DateTime" }
+      ]
+    },
+    {
+      "label": "Country",
+      "key": ["code"],
+      "keyType": "NODE KEY",
+      "properties": [
+        { "name": "code", "type": "String" },
+        { "name": "name", "type": "String" }
+      ]
+    },
+    {
+      "label": "Device",
+      "key": ["deviceId"],
+      "keyType": "NODE KEY",
+      "properties": [
+        { "name": "deviceId", "type": "String" },
+        { "name": "deviceType", "type": "String" },
+        { "name": "userAgent", "type": "String" },
+        { "name": "createdAt", "type": "DateTime" }
+      ]
+    },
+    {
+      "label": "IP",
+      "key": ["ipAddress"],
+      "keyType": "NODE KEY",
+      "properties": [
+        { "name": "ipAddress", "type": "String" },
+        { "name": "createdAt", "type": "DateTime" }
+      ]
+    },
+    {
+      "label": "ISP",
+      "key": ["name"],
+      "keyType": "NODE KEY",
+      "properties": [
+        { "name": "name", "type": "String" },
+        { "name": "createdAt", "type": "DateTime" }
+      ]
+    },
+    {
+      "label": "Location",
+      "key": [],
+      "properties": [
+        { "name": "city", "type": "String" },
+        { "name": "postCode", "type": "String" },
+        { "name": "country", "type": "Country.ref" },
+        { "name": "latitude", "type": "Float" },
+        { "name": "longitude", "type": "Float" },
+        { "name": "createdAt", "type": "DateTime" }
+      ]
+    },
+    {
+      "label": "Session",
+      "key": ["sessionId"],
+      "keyType": "NODE KEY",
+      "properties": [
+        { "name": "sessionId", "type": "String" },
+        { "name": "status", "type": "String" },
+        { "name": "createdAt", "type": "DateTime" }
+      ]
+    },
+    {
+      "label": "Email",
+      "key": ["address"],
+      "keyType": "NODE KEY",
+      "properties": [
+        { "name": "address", "type": "String" },
+        { "name": "domain", "type": "String" },
+        { "name": "createdAt", "type": "DateTime" }
+      ]
+    },
+    {
+      "label": "Phone",
+      "key": ["phoneNumber"],
+      "keyType": "NODE KEY",
+      "properties": [
+        { "name": "phoneNumber", "type": "String" },
+        { "name": "countryCode", "type": "String" },
+        { "name": "createdAt", "type": "DateTime" }
+      ],
+      "note": "Doc's constraint is written as p.number while the property is phoneNumber; kept the property name phoneNumber and flagged the mismatch in constraints."
+    },
+    {
+      "label": "Passport",
+      "key": ["passportNumber", "issuingCountry"],
+      "keyType": "NODE KEY",
+      "properties": [
+        { "name": "passportNumber", "type": "String" },
+        { "name": "issueDate", "type": "Date" },
+        { "name": "expiryDate", "type": "Date" },
+        { "name": "issuingCountry", "type": "Country.ref" },
+        { "name": "nationality", "type": "Country.ref" },
+        { "name": "createdAt", "type": "DateTime" }
+      ]
+    },
+    {
+      "label": "DrivingLicense",
+      "key": ["licenseNumber", "issuingCountry"],
+      "keyType": "NODE KEY",
+      "properties": [
+        { "name": "licenseNumber", "type": "String" },
+        { "name": "issueDate", "type": "Date" },
+        { "name": "expiryDate", "type": "Date" },
+        { "name": "issuingCountry", "type": "Country.ref" },
+        { "name": "createdAt", "type": "DateTime" }
+      ]
+    },
+    {
+      "label": "Face",
+      "key": ["faceId"],
+      "keyType": "NODE KEY",
+      "properties": [
+        { "name": "faceId", "type": "String" },
+        { "name": "embedding", "type": "List<Float>", "vector": true },
+        { "name": "createdAt", "type": "DateTime" }
+      ]
+    },
+    {
+      "label": "Alert",
+      "proposed": true,
+      "key": ["alertId"],
+      "keyType": "NODE KEY",
+      "properties": [
+        { "name": "alertId", "type": "String" },
+        { "name": "ruleName", "type": "String" },
+        { "name": "ruleId", "type": "String" },
+        { "name": "severity", "type": "String" },
+        { "name": "triggeredAt", "type": "DateTime" }
+      ]
+    },
+    {
+      "label": "Case",
+      "proposed": true,
+      "key": ["caseId"],
+      "keyType": "NODE KEY",
+      "properties": [
+        { "name": "caseId", "type": "String" },
+        { "name": "status", "type": "String" },
+        { "name": "outcome", "type": "String", "optional": true },
+        { "name": "financialStakes", "type": "Float" },
+        { "name": "investigatedBy", "type": "String" },
+        { "name": "createdAt", "type": "DateTime" },
+        { "name": "closedAt", "type": "DateTime", "optional": true }
+      ]
+    }
+  ],
+  "relationships": [
+    { "type": "PERFORMS", "from": "Account", "to": "Transaction", "properties": [] },
+    { "type": "HAS_LEG", "from": "Transaction", "to": "TransactionEntry", "properties": [], "proposed": true },
+    { "type": "POSTED_TO", "from": "TransactionEntry", "to": "Account", "properties": [], "proposed": true },
+    { "type": "BENEFITS_TO", "from": "Transaction", "to": "Account", "properties": [] },
+    { "type": "HAS_ACCOUNT", "from": "Customer", "to": "Account", "properties": ["role", "since"] },
+    { "type": "HAS_ACCOUNT", "from": "Counterparty", "to": "Account", "properties": ["since"] },
+    { "type": "HAS_ADDRESS", "from": "Customer", "to": "Address", "properties": ["addedAt", "lastChangedAt", "isCurrent"] },
+    { "type": "HAS_ADDRESS", "from": "Counterparty", "to": "Address", "properties": ["since", "isCurrent"] },
+    { "type": "HAS_DRIVING_LICENSE", "from": "Customer", "to": "DrivingLicense", "properties": ["verificationDate", "verificationMethod", "verificationStatus"] },
+    { "type": "HAS_EMAIL", "from": "Customer", "to": "Email", "properties": ["since"] },
+    { "type": "HAS_FACE", "from": "Customer", "to": "Face", "properties": ["verificationDate", "verificationMethod", "verificationStatus"] },
+    { "type": "HAS_NATIONALITY", "from": "Customer", "to": "Country", "properties": [] },
+    { "type": "HAS_PASSPORT", "from": "Customer", "to": "Passport", "properties": ["verificationDate", "verificationMethod", "verificationStatus"] },
+    { "type": "HAS_PHONE", "from": "Customer", "to": "Phone", "properties": ["since"] },
+    { "type": "IMPLIED", "from": "Transaction", "to": "Movement", "properties": ["totalMovements"] },
+    { "type": "IS_ALLOCATED_TO", "from": "IP", "to": "ISP", "properties": ["createdAt"] },
+    { "type": "IS_HOSTED", "from": "Account", "to": "Country", "properties": [] },
+    { "type": "LOCATED_IN", "from": "Address", "to": "Country", "properties": [] },
+    { "type": "LOCATED_IN", "from": "IP", "to": "Location", "properties": ["createdAt"] },
+    { "type": "LOCATED_IN", "from": "Location", "to": "Country", "properties": [] },
+    { "type": "SESSION_USES_DEVICE", "from": "Session", "to": "Device", "properties": [] },
+    { "type": "USES_IP", "from": "Session", "to": "IP", "properties": [] },
+    { "type": "USED_BY", "from": "Device", "to": "Customer", "properties": ["lastUsed"] },
+    { "type": "SUBJECT_OF", "from": "Account", "to": "Case", "properties": [], "proposed": true },
+    { "type": "SUBJECT_OF", "from": "Customer", "to": "Case", "properties": [], "proposed": true },
+    { "type": "TRIGGERED", "from": "Alert", "to": "Case", "properties": [], "proposed": true }
+  ],
+  "constraints": [
+    { "name": "customer_id", "label": "Customer", "properties": ["customerId"], "type": "NODE KEY", "cypher": "CREATE CONSTRAINT customer_id IF NOT EXISTS FOR (c:Customer) REQUIRE c.customerId IS NODE KEY" },
+    { "name": "email_address", "label": "Email", "properties": ["address"], "type": "NODE KEY", "cypher": "CREATE CONSTRAINT email_address IF NOT EXISTS FOR (e:Email) REQUIRE e.address IS NODE KEY" },
+    { "name": "phone_number", "label": "Phone", "properties": ["phoneNumber"], "type": "NODE KEY", "docProperty": "number", "cypher": "CREATE CONSTRAINT phone_number IF NOT EXISTS FOR (p:Phone) REQUIRE p.phoneNumber IS NODE KEY" },
+    { "name": "passport_composite", "label": "Passport", "properties": ["passportNumber", "issuingCountry"], "type": "NODE KEY", "cypher": "CREATE CONSTRAINT passport_composite IF NOT EXISTS FOR (p:Passport) REQUIRE (p.passportNumber, p.issuingCountry) IS NODE KEY" },
+    { "name": "driving_license_composite", "label": "DrivingLicense", "properties": ["licenseNumber", "issuingCountry"], "type": "NODE KEY", "cypher": "CREATE CONSTRAINT driving_license_composite IF NOT EXISTS FOR (d:DrivingLicense) REQUIRE (d.licenseNumber, d.issuingCountry) IS NODE KEY" },
+    { "name": "device_id", "label": "Device", "properties": ["deviceId"], "type": "NODE KEY", "cypher": "CREATE CONSTRAINT device_id IF NOT EXISTS FOR (d:Device) REQUIRE d.deviceId IS NODE KEY" },
+    { "name": "ip_address", "label": "IP", "properties": ["ipAddress"], "type": "NODE KEY", "cypher": "CREATE CONSTRAINT ip_address IF NOT EXISTS FOR (i:IP) REQUIRE i.ipAddress IS NODE KEY" },
+    { "name": "session_id", "label": "Session", "properties": ["sessionId"], "type": "NODE KEY", "cypher": "CREATE CONSTRAINT session_id IF NOT EXISTS FOR (s:Session) REQUIRE s.sessionId IS NODE KEY" },
+    { "name": "account_number", "label": "Account", "properties": ["accountNumber"], "type": "NODE KEY", "cypher": "CREATE CONSTRAINT account_number IF NOT EXISTS FOR (a:Account) REQUIRE a.accountNumber IS NODE KEY" },
+    { "name": "transaction_id", "label": "Transaction", "properties": ["transactionId"], "type": "NODE KEY", "cypher": "CREATE CONSTRAINT transaction_id IF NOT EXISTS FOR (t:Transaction) REQUIRE t.transactionId IS NODE KEY" },
+    { "name": "face_id", "label": "Face", "properties": ["faceId"], "type": "NODE KEY", "cypher": "CREATE CONSTRAINT face_id IF NOT EXISTS FOR (f:Face) REQUIRE f.faceId IS NODE KEY" },
+    { "name": "counterparty_id", "label": "Counterparty", "properties": ["counterpartyId"], "type": "NODE KEY", "cypher": "CREATE CONSTRAINT counterparty_id IF NOT EXISTS FOR (c:Counterparty) REQUIRE c.counterpartyId IS NODE KEY" },
+    { "name": "movement_id", "label": "Movement", "properties": ["movementId"], "type": "NODE KEY", "cypher": "CREATE CONSTRAINT movement_id IF NOT EXISTS FOR (m:Movement) REQUIRE m.movementId IS NODE KEY" },
+    { "name": "isp_name", "label": "ISP", "properties": ["name"], "type": "NODE KEY", "cypher": "CREATE CONSTRAINT isp_name IF NOT EXISTS FOR (i:ISP) REQUIRE i.name IS NODE KEY" },
+    { "name": "country_code", "label": "Country", "properties": ["code"], "type": "NODE KEY", "cypher": "CREATE CONSTRAINT country_code IF NOT EXISTS FOR (c:Country) REQUIRE c.code IS NODE KEY" },
+    { "name": "address_composite", "label": "Address", "properties": ["addressLine1", "postCode"], "type": "NODE KEY", "cypher": "CREATE CONSTRAINT address_composite IF NOT EXISTS FOR (a:Address) REQUIRE (a.addressLine1, a.postCode) IS NODE KEY" },
+    { "name": "alert_id", "label": "Alert", "properties": ["alertId"], "type": "NODE KEY", "proposed": true, "cypher": "CREATE CONSTRAINT alert_id IF NOT EXISTS FOR (a:Alert) REQUIRE a.alertId IS NODE KEY" },
+    { "name": "case_id", "label": "Case", "properties": ["caseId"], "type": "NODE KEY", "proposed": true, "cypher": "CREATE CONSTRAINT case_id IF NOT EXISTS FOR (c:Case) REQUIRE c.caseId IS NODE KEY" }
+  ],
+  "indexes": [
+    { "name": "transaction_date_idx", "label": "Transaction", "properties": ["date"], "type": "RANGE", "cypher": "CREATE INDEX transaction_date_idx IF NOT EXISTS FOR (t:Transaction) ON (t.date)" },
+    { "name": "transaction_amount_idx", "label": "Transaction", "properties": ["amount"], "type": "RANGE", "cypher": "CREATE INDEX transaction_amount_idx IF NOT EXISTS FOR (t:Transaction) ON (t.amount)" },
+    { "name": "face_embedding", "label": "Face", "properties": ["embedding"], "type": "VECTOR", "options": { "dimensions": null, "similarity_function": "cosine" }, "cypher": "CREATE VECTOR INDEX face_embedding IF NOT EXISTS FOR (f:Face) ON (f.embedding) OPTIONS {indexConfig: {'vector.dimensions': <dim>, 'vector.similarity_function': 'cosine'}}" },
+    { "name": "customer_name_idx", "label": "Customer", "properties": ["firstName", "lastName"], "type": "FULLTEXT", "cypher": "CREATE FULLTEXT INDEX customer_name_idx IF NOT EXISTS FOR (c:Customer) ON EACH [c.firstName, c.lastName]" }
+  ]
+}

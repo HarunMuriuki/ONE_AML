@@ -1,0 +1,203 @@
+{
+  "generatedAt" : "2026-10-10T16:01:51.559883700Z",
+  "source" : "Oracle (not refreshed yet - open the Rules page and click Generate)",
+  "tables" : [ "TBAADM.GAM", "TBAADM.SMT", "TBAADM.SOL", "TBAADM.GSM", "TBAADM.HTD", "TBAADM.DTD", "TBAADM.CTD_DTD_ACLI_VIEW", "CRMUSER.ACCOUNTS", "CRMUSER.DEMOGRAPHIC" ],
+  "groups" : [ {
+    "id" : "aliases",
+    "title" : "Aliases (synonyms)",
+    "description" : "Finacle short codes are synonyms of the real (long) table names.",
+    "columns" : [ "owner", "synonym_name", "table_owner", "real_table", "db_link" ],
+    "rows" : [ {
+      "owner" : "CRMBATCHUSER",
+      "synonym_name" : "ACCOUNTS",
+      "table_owner" : "CRMUSER",
+      "real_table" : "ACCOUNTS",
+      "db_link" : null
+    }, {
+      "owner" : "CRMBATCHUSER",
+      "synonym_name" : "DEMOGRAPHIC",
+      "table_owner" : "CRMUSER",
+      "real_table" : "DEMOGRAPHIC",
+      "db_link" : null
+    }, {
+      "owner" : "TBAADM",
+      "synonym_name" : "DCTD_ACLI",
+      "table_owner" : "TBAADM",
+      "real_table" : "CTD_DTD_ACLI_VIEW",
+      "db_link" : null
+    }, {
+      "owner" : "TBAADM",
+      "synonym_name" : "DTD",
+      "table_owner" : "TBAADM",
+      "real_table" : "DAILY_TRAN_DETAIL_TABLE",
+      "db_link" : null
+    }, {
+      "owner" : "TBAADM",
+      "synonym_name" : "GAM",
+      "table_owner" : "TBAADM",
+      "real_table" : "GENERAL_ACCT_MAST_TABLE",
+      "db_link" : null
+    }, {
+      "owner" : "TBAADM",
+      "synonym_name" : "HTD",
+      "table_owner" : "TBAADM",
+      "real_table" : "HIST_TRAN_DTL_TABLE",
+      "db_link" : null
+    }, {
+      "owner" : "TBAADM",
+      "synonym_name" : "SMT",
+      "table_owner" : "TBAADM",
+      "real_table" : "SBCA_MAST_TABLE",
+      "db_link" : null
+    }, {
+      "owner" : "TBAADM",
+      "synonym_name" : "SOL",
+      "table_owner" : "TBAADM",
+      "real_table" : "SERVICE_OUTLET_TABLE",
+      "db_link" : null
+    }, {
+      "owner" : "TBAGEN",
+      "synonym_name" : "DCTD_ACLI",
+      "table_owner" : "TBAADM",
+      "real_table" : "CTD_DTD_ACLI_VIEW",
+      "db_link" : null
+    }, {
+      "owner" : "TBAGEN",
+      "synonym_name" : "DTD",
+      "table_owner" : "TBAADM",
+      "real_table" : "DAILY_TRAN_DETAIL_TABLE",
+      "db_link" : null
+    }, {
+      "owner" : "TBAGEN",
+      "synonym_name" : "GAM",
+      "table_owner" : "TBAADM",
+      "real_table" : "GENERAL_ACCT_MAST_TABLE",
+      "db_link" : null
+    }, {
+      "owner" : "TBAGEN",
+      "synonym_name" : "HTD",
+      "table_owner" : "TBAADM",
+      "real_table" : "HIST_TRAN_DTL_TABLE",
+      "db_link" : null
+    }, {
+      "owner" : "TBAGEN",
+      "synonym_name" : "SMT",
+      "table_owner" : "TBAADM",
+      "real_table" : "SBCA_MAST_TABLE",
+      "db_link" : null
+    }, {
+      "owner" : "TBAGEN",
+      "synonym_name" : "SOL",
+      "table_owner" : "TBAADM",
+      "real_table" : "SERVICE_OUTLET_TABLE",
+      "db_link" : null
+    }, {
+      "owner" : "TBAUTIL",
+      "synonym_name" : "DCTD_ACLI",
+      "table_owner" : "TBAADM",
+      "real_table" : "CTD_DTD_ACLI_VIEW",
+      "db_link" : null
+    }, {
+      "owner" : "TBAUTIL",
+      "synonym_name" : "DTD",
+      "table_owner" : "TBAADM",
+      "real_table" : "DAILY_TRAN_DETAIL_TABLE",
+      "db_link" : null
+    }, {
+      "owner" : "TBAUTIL",
+      "synonym_name" : "GAM",
+      "table_owner" : "TBAADM",
+      "real_table" : "GENERAL_ACCT_MAST_TABLE",
+      "db_link" : null
+    }, {
+      "owner" : "TBAUTIL",
+      "synonym_name" : "HTD",
+      "table_owner" : "TBAADM",
+      "real_table" : "HIST_TRAN_DTL_TABLE",
+      "db_link" : null
+    }, {
+      "owner" : "TBAUTIL",
+      "synonym_name" : "SMT",
+      "table_owner" : "TBAADM",
+      "real_table" : "SBCA_MAST_TABLE",
+      "db_link" : null
+    }, {
+      "owner" : "TBAUTIL",
+      "synonym_name" : "SOL",
+      "table_owner" : "TBAADM",
+      "real_table" : "SERVICE_OUTLET_TABLE",
+      "db_link" : null
+    } ],
+    "ok" : true
+  }, {
+    "id" : "primary_keys",
+    "title" : "Primary Keys & Unique Keys",
+    "description" : "Declared identity of each table (composite keys included).",
+    "columns" : [ "owner", "table_name", "constraint_name", "constraint_type", "column_name", "position" ],
+    "rows" : [ {
+      "owner" : "CRMUSER",
+      "table_name" : "ACCOUNTS",
+      "constraint_name" : "PK1",
+      "constraint_type" : "P",
+      "column_name" : "ACCOUNTID",
+      "position" : 1
+    }, {
+      "owner" : "CRMUSER",
+      "table_name" : "ACCOUNTS",
+      "constraint_name" : "PK1",
+      "constraint_type" : "P",
+      "column_name" : "BANK_ID",
+      "position" : 2
+    }, {
+      "owner" : "CRMUSER",
+      "table_name" : "DEMOGRAPHIC",
+      "constraint_name" : "PK47",
+      "constraint_type" : "P",
+      "column_name" : "DEMOGRAPHICID",
+      "position" : 1
+    }, {
+      "owner" : "CRMUSER",
+      "table_name" : "DEMOGRAPHIC",
+      "constraint_name" : "PK47",
+      "constraint_type" : "P",
+      "column_name" : "BANK_ID",
+      "position" : 2
+    } ],
+    "ok" : true
+  }, {
+    "id" : "joins_declared",
+    "title" : "Declared Joins (Foreign Keys)",
+    "description" : "Foreign-key relationships declared in the dictionary.",
+    "columns" : [ ],
+    "rows" : [ ],
+    "ok" : null
+  }, {
+    "id" : "joins_candidate",
+    "title" : "Candidate Joins (shared columns)",
+    "description" : "Column names appearing in more than one scanned table -> candidate join keys (Finacle often has no FKs).",
+    "columns" : [ ],
+    "rows" : [ ],
+    "ok" : null
+  }, {
+    "id" : "indexes",
+    "title" : "Indexes",
+    "description" : "Indexes and their uniqueness (effective identifiers even without a PK).",
+    "columns" : [ ],
+    "rows" : [ ],
+    "ok" : null
+  }, {
+    "id" : "columns",
+    "title" : "Columns",
+    "description" : "Every column of the scanned tables.",
+    "columns" : [ ],
+    "rows" : [ ],
+    "ok" : null
+  }, {
+    "id" : "table_sizes",
+    "title" : "Table Sizes (statistics)",
+    "description" : "Approximate row counts from optimizer statistics.",
+    "columns" : [ ],
+    "rows" : [ ],
+    "ok" : null
+  } ]
+}
